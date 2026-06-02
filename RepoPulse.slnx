@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="RepoPulse.API/RepoPulse.API.csproj" />
+  <Project Path="RepoPulse.Client/RepoPulse.Client.csproj" />
+</Solution>
