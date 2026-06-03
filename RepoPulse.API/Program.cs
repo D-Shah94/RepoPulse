@@ -1,23 +1,39 @@
 using Microsoft.EntityFrameworkCore;
 using RepoPulse.API.Data;
+using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-
-
+// Database configuration (SQLite)
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-builder.Services.AddControllers();
+// Controllers & JSON formatting
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        // Prevent infinite loops when serialising EF Core relational models
+        options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
+    });
+
+// CORS Policy
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAll", policy =>
+    {
+        policy.AllowAnyOrigin()
+            .AllowAnyMethod()
+            .AllowAnyHeader();
+    });
+});
+
+// Swagger/OpenAPI configuration
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
 // Data Initialisation
-// Execute custom startup logic to apply EF Core migrations
-// Pass in app.Services so the initialiser can resolve the DbContext
 
 try
 {
@@ -39,6 +55,10 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+
+// Enable CORS policy defined above (before authorisation)
+app.UseCors("AllowAll");
 app.UseAuthorization();
 app.MapControllers();
 
