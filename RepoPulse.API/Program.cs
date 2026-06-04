@@ -1,14 +1,20 @@
 using Microsoft.EntityFrameworkCore;
 using RepoPulse.API.Data;
+using RepoPulse.API.Options;
+using RepoPulse.API.Services;
 using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Database configuration (SQLite)
+// 1. Database
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")
+        ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.")));
 
-// Controllers & JSON formatting
+// 2. Configuration & Options
+builder.Services.Configure<GitHubApiOptions>(builder.Configuration.GetSection("GitHubApi"));
+
+// 3. Controllers & JSON Formatting
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
@@ -16,24 +22,34 @@ builder.Services.AddControllers()
         options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
     });
 
-// CORS Policy
+// 4. In-Memory Cache & GitHub Client
+builder.Services.AddMemoryCache();
+builder.Services.AddHttpClient<IGitHubService, GitHubService>(client =>
+{
+    var baseUrl = builder.Configuration["GitHubApi:BaseUrl"] ?? "https://api.github.com";
+    var userAgent = builder.Configuration["GitHubApi:UserAgent"] ?? "RepoPulse-App/1.0";
+    client.BaseAddress = new Uri(baseUrl);
+    client.DefaultRequestHeaders.UserAgent.ParseAdd(userAgent);
+});
+
+// 5. CORS Policy
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowAll", policy =>
+    options.AddPolicy("BlazorClient", policy =>
     {
-        policy.AllowAnyOrigin()
-            .AllowAnyMethod()
-            .AllowAnyHeader();
+        policy.WithOrigins("https://localhost:7001", "http://localhost:5001")
+            .AllowAnyHeader()
+            .AllowAnyMethod();
     });
 });
 
-// Swagger/OpenAPI configuration
+// 6. Swagger/OpenAPI
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
-// Data Initialisation
+// 7. Data Initialisation
 
 try
 {
@@ -41,24 +57,28 @@ try
 }
 catch (Exception ex)
 {
-    // If the database fails to initialise, it's caught here at the top level
-    // and stops the application completely
     Console.WriteLine($"Fatal error during database initialisation: {ex.Message}");
-    return; // exit app
+    return;
 }
 
-// Configure the HTTP request pipeline
+// 8. Middleware
 if (app.Environment.IsDevelopment())
 {
+    app.UseDeveloperExceptionPage();
     app.UseSwagger();
     app.UseSwaggerUI();
+}
+else
+{
+    app.UseExceptionHandler("/error");
+    app.UseHsts();
 }
 
 app.UseHttpsRedirection();
 
 
-// Enable CORS policy defined above (before authorisation)
-app.UseCors("AllowAll");
+// Apply the strict Blazor CORS Policy
+app.UseCors("BlazorClient");
 app.UseAuthorization();
 app.MapControllers();
 
