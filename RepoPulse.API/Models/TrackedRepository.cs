@@ -19,7 +19,7 @@
         public DateTime? LastFetchedAt { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
-        public virtual ICollection<DependencySnapshot> Snapshots { get; set; } = new List<DependencySnapshot>();
+        public virtual ICollection<DependencySnapshot> DependencySnapshots { get; set; } = new List<DependencySnapshot>();
     }
 
 }

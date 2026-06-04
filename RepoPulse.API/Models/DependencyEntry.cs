@@ -7,9 +7,9 @@
     {
         public int Id { get; set; }
         public int SnapshotId { get; set; }
-        public required string Name { get; set; }
+        public required string PackageName { get; set; }
         public required string Version { get; set; }
-        public required string Type { get; set; }
-        public virtual DependencySnapshot Snapshot { get; set; } = null!;
+        public required string PackageType { get; set; }
+        public virtual DependencySnapshot DependencySnapshot { get; set; } = null!;
     }
 }

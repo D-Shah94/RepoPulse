@@ -32,6 +32,11 @@ builder.Services.AddHttpClient<IGitHubService, GitHubService>(client =>
     client.DefaultRequestHeaders.UserAgent.ParseAdd(userAgent);
 });
 
+// 4.5. Application Services
+builder.Services.AddScoped<IRepositoryService, RepositoryService>();
+builder.Services.AddScoped<DependencyParser>();
+
+
 // 5. CORS Policy
 builder.Services.AddCors(options =>
 {

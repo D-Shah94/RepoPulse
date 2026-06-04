@@ -14,7 +14,7 @@
         /// </summary>
         public required string ManifestFile { get; set; }
         public DateTime FetchedAt { get; set; } = DateTime.UtcNow;
-        public virtual TrackedRepository Repository { get; set; } = null!;
-        public virtual ICollection<DependencyEntry> Dependencies { get; set; } = new List<DependencyEntry>();
+        public virtual TrackedRepository TrackedRepository { get; set; } = null!;
+        public virtual ICollection<DependencyEntry> Entries { get; set; } = new List<DependencyEntry>();
     }
 }

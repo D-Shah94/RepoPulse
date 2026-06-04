@@ -68,8 +68,8 @@ namespace RepoPulse.API.Data
                     .IsRequired()
                     .HasMaxLength(200);
 
-                entity.HasOne(s => s.Repository)
-                    .WithMany(r => r.Snapshots)
+                entity.HasOne(s => s.TrackedRepository)
+                    .WithMany(r => r.DependencySnapshots)
                     .HasForeignKey(s => s.RepositoryId)
                     .OnDelete(DeleteBehavior.Cascade);
             });
@@ -79,7 +79,7 @@ namespace RepoPulse.API.Data
             {
                 entity.HasKey(e => e.Id);
 
-                entity.Property(e => e.Name)
+                entity.Property(e => e.PackageName)
                     .IsRequired()
                     .HasMaxLength(200);
 
@@ -87,12 +87,12 @@ namespace RepoPulse.API.Data
                     .IsRequired()
                     .HasMaxLength(200);
 
-                entity.Property(e => e.Type)
+                entity.Property(e => e.PackageType)
                     .IsRequired()
                     .HasMaxLength(200);
 
-                entity.HasOne(e => e.Snapshot)
-                    .WithMany(s => s.Dependencies)
+                entity.HasOne(e => e.DependencySnapshot)
+                    .WithMany(s => s.Entries)
                     .HasForeignKey(e => e.SnapshotId)
                     .OnDelete(DeleteBehavior.Cascade);
             });
