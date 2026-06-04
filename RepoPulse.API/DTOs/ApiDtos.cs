@@ -1,6 +1,8 @@
-﻿namespace RepoPulse.API.DTOs;
+﻿using System.ComponentModel.DataAnnotations;
 
-public sealed record RepositoryDto(
+namespace RepoPulse.API.DTOs;
+
+public sealed record ApiDtos(
     int Id,
     string Owner,
     string RepoName,
@@ -11,8 +13,15 @@ public sealed record RepositoryDto(
 );
 
 public sealed record CreateRepositoryDto(
+    [Required(ErrorMessage = "Repository owner is required.")]
+    [MaxLength(100, ErrorMessage = "Owner name cannot exceed 100 characters.")]
     string Owner,
+
+    [Required(ErrorMessage = "Repository name is required.")]
+    [MaxLength(100, ErrorMessage = "Repository name cannot exceed 100 characters.")]
     string RepoName,
+
+    [MaxLength(500, ErrorMessage = "Description cannot exceed 500 characters.")]
     string? Description
 );
 

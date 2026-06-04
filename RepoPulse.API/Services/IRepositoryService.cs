@@ -4,9 +4,9 @@ namespace RepoPulse.API.Services;
 
 public interface IRepositoryService
 {
-    Task<IReadOnlyList<RepositoryDto>> GetAllAsync();
-    Task<RepositoryDto?> GetByIdAsync(int id);
-    Task<RepositoryDto> CreateAsync(CreateRepositoryDto dto);
+    Task<IReadOnlyList<ApiDtos>> GetAllAsync();
+    Task<ApiDtos?> GetByIdAsync(int id);
+    Task<ApiDtos> CreateAsync(CreateRepositoryDto dto);
     Task<bool> DeleteAsync(int id);
     Task<DependencyFetchResultDto?> FetchDependenciesAsync(int repositoryId);
 }
