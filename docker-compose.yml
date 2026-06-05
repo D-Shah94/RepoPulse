@@ -1,0 +1,30 @@
+version: '3.8'
+
+services:
+  repopulse-api:
+    build:
+      context: .
+      dockerfile: RepoPulse.API/Dockerfile
+    ports:
+      - "8080:8080"
+    volumes:
+      - repopulse-data:/app/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/api/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  repopulse-client:
+    build:
+      context: .
+      dockerfile: RepoPulse.Client/Dockerfile
+    ports:
+      - "3000:80"
+    depends_on:
+      repopulse-api:
+        condition: service_healthy
+
+volumes:
+  repopulse-data:

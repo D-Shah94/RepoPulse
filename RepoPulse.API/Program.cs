@@ -45,7 +45,7 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("BlazorClient", policy =>
     {
-        policy.WithOrigins("https://localhost:7017", "https://localhost:7001", "http://localhost:5001")
+        policy.WithOrigins("https://localhost:7017", "https://localhost:7001", "http://localhost:5001", "http://localhost:3000")
             .AllowAnyHeader()
             .AllowAnyMethod();
     });
@@ -82,8 +82,7 @@ else
     app.UseHsts();
 }
 
-app.UseHttpsRedirection();
-
+//app.UseHttpsRedirection();
 
 // Apply the strict Blazor CORS Policy
 app.UseCors("BlazorClient");
