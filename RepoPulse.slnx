@@ -1,4 +1,8 @@
 <Solution>
+  <Folder Name="/Solution Items/">
+    <File Path=".editorconfig" />
+  </Folder>
   <Project Path="RepoPulse.API/RepoPulse.API.csproj" />
   <Project Path="RepoPulse.Client/RepoPulse.Client.csproj" />
+  <Project Path="RepoPulse.Tests/RepoPulse.Tests.csproj" Id="e48fc655-4584-4682-b04b-a5aa2842d331" />
 </Solution>

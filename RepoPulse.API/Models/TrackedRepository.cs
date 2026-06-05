@@ -11,7 +11,7 @@
         public required string RepoName { get; set; }
 
         public string? Description { get; set; }
-        
+
         /// <summary>
         /// The timestamp of the most recent successful dependency fetch. 
         /// Null indicates the repository is registered but has not yet been scanned.

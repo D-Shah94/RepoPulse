@@ -45,7 +45,7 @@ public class DependencyParser
         return results.AsReadOnly();
     }
 
-    private IReadOnlyList<ParsedDependencyDto> ParseManifest(string fileName, string content)
+    public IReadOnlyList<ParsedDependencyDto> ParseManifest(string fileName, string content)
     {
         try
         {

@@ -1,5 +1,5 @@
-﻿using System.Net.Http.Json;
-using RepoPulse.Client.Models;
+﻿using RepoPulse.Client.Models;
+using System.Net.Http.Json;
 
 namespace RepoPulse.Client.Services;
 
