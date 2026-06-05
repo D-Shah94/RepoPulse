@@ -2,7 +2,7 @@
 
 namespace RepoPulse.API.DTOs;
 
-public sealed record ApiDtos(
+public sealed record RepositoryDto(
     int Id,
     string Owner,
     string RepoName,

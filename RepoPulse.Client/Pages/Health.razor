@@ -1,0 +1,62 @@
+﻿@page "/health"
+@inject ApiClient Api
+
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+    <div>
+        <h1 style="margin-bottom: 0.5rem;">System Health</h1>
+        <p style="color: var(--color-text-muted);">Real-time operational status of the RepoPulse API and upstream services.</p>
+    </div>
+    <button class="btn btn-primary" @onclick="LoadHealthData" disabled="@_isLoading">
+        @if (_isLoading)
+        {
+            <span>Refreshing...</span>
+        }
+        else
+        {
+            <span>Refresh Status</span>
+        }
+    </button>
+</div>
+
+@if (_isLoading && _status == null)
+{
+    <p style="color: var(--color-text-muted);">Fetching diagnostic data...</p>
+}
+else if (_status != null)
+{
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem;">
+
+        <CheckCard Title="API Connectivity"
+                   Message="The connection between the Blazor Client and the RepoPulse Backend API."
+                   IsHealthy="true" />
+
+        <CheckCard Title="GitHub Upstream API"
+                   Message="@_status.Detail"
+                   IsHealthy="@_status.IsReachable" />
+
+        <CheckCard Title="GitHub Rate Limit"
+                   Message="@($"Remaining: {_status.RateLimitRemaining} / {_status.RateLimitTotal}")"
+                   IsHealthy="@(_status.RateLimitRemaining > 0)" />
+
+    </div>
+}
+
+@code {
+    private GitHubHealthStatus? _status;
+    private bool _isLoading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadHealthData();
+    }
+
+    private async Task LoadHealthData()
+    {
+        _isLoading = true;
+
+        // This is where the magic happens! We call our backend through the ApiClient bridge.
+        _status = await Api.GetHealthAsync();
+
+        _isLoading = false;
+    }
+}

@@ -1,15 +1,15 @@
 ﻿@inherits LayoutComponentBase
-<div class="page">
-    <div class="sidebar">
+
+<div class="app-container">
+    <aside class="sidebar">
+        <a href="" class="sidebar-brand">
+            RepoPulse <span style="color: #3b82f6;">.</span>
+        </a>
         <NavMenu />
-    </div>
+    </aside>
 
-    <main>
-        <div class="top-row px-4">
-            <a href="https://learn.microsoft.com/aspnet/core/" target="_blank">About</a>
-        </div>
-
-        <article class="content px-4">
+    <main class="main-content">
+        <article class="content-area">
             @Body
         </article>
     </main>

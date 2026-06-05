@@ -19,7 +19,7 @@ public class RepositoriesController : ControllerBase
 
     // GET: api/repositories
     [HttpGet]
-    public async Task<ActionResult<IReadOnlyList<ApiDtos>>> GetAll()
+    public async Task<ActionResult<IReadOnlyList<RepositoryDto>>> GetAll()
     {
         var repos = await _repositoryService.GetAllAsync();
         return Ok(repos); // Returns 200 OK
@@ -27,7 +27,7 @@ public class RepositoriesController : ControllerBase
 
     // GET: api/repositories/5
     [HttpGet("{id:int}")]
-    public async Task<ActionResult<ApiDtos>> GetById(int id)
+    public async Task<ActionResult<RepositoryDto>> GetById(int id)
     {
         var repo = await _repositoryService.GetByIdAsync(id);
 
@@ -41,7 +41,7 @@ public class RepositoriesController : ControllerBase
 
     // POST: api/repositories
     [HttpPost]
-    public async Task<ActionResult<ApiDtos>> Create([FromBody] CreateRepositoryDto dto)
+    public async Task<ActionResult<RepositoryDto>> Create([FromBody] CreateRepositoryDto dto)
     {
         var createdRepo = await _repositoryService.CreateAsync(dto);
 

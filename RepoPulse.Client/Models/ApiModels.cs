@@ -1,4 +1,6 @@
-﻿namespace RepoPulse.Client.Models;
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace RepoPulse.Client.Models;
 
 public sealed record RepositoryDto(
     int Id,
@@ -10,11 +12,16 @@ public sealed record RepositoryDto(
     string FullName
 );
 
-public sealed record CreateRepositoryDto(
-    string Owner,
-    string RepoName,
-    string? Description
-);
+public class CreateRepositoryDto
+{
+    [Required(ErrorMessage = "Repository owner is required.")]
+    public string Owner { get; set; } = string.Empty;
+
+    [Required(ErrorMessage = "Repository name is required.")]
+    public string RepoName { get; set; } = string.Empty;
+
+    public string? Description { get; set; }
+}
 
 public sealed record DependencyFetchResultDto(
     int RepositoryId,

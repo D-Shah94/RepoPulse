@@ -1,39 +1,53 @@
-﻿<div class="top-row ps-3 navbar navbar-dark">
-    <div class="container-fluid">
-        <a class="navbar-brand" href="">RepoPulse.Client</a>
-        <button title="Navigation menu" class="navbar-toggler" @onclick="ToggleNavMenu">
-            <span class="navbar-toggler-icon"></span>
-        </button>
+﻿<nav class="nav-menu">
+    <div class="nav-item">
+        <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
+            <span class="icon">📊</span> Dashboard
+        </NavLink>
     </div>
-</div>
 
-<div class="@NavMenuCssClass nav-scrollable" @onclick="ToggleNavMenu">
-    <nav class="nav flex-column">
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
-                <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Home
-            </NavLink>
-        </div>
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="counter">
-                <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Counter
-            </NavLink>
-        </div>
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="weather">
-                <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Weather
-            </NavLink>
-        </div>
-    </nav>
-</div>
+    <div class="nav-item">
+        <NavLink class="nav-link" href="repositories">
+            <span class="icon">📦</span> Repositories
+        </NavLink>
+    </div>
 
-@code {
-    private bool collapseNavMenu = true;
+    <div class="nav-item">
+        <NavLink class="nav-link" href="health">
+            <span class="icon">🩺</span> System Health
+        </NavLink>
+    </div>
+</nav>
 
-    private string? NavMenuCssClass => collapseNavMenu ? "collapse" : null;
-
-    private void ToggleNavMenu()
-    {
-        collapseNavMenu = !collapseNavMenu;
+<style>
+    .nav-menu {
+        display: flex;
+        flex-direction: column;
+        padding: 1rem 0;
     }
-}
+
+    .nav-link {
+        display: flex;
+        align-items: center;
+        padding: 0.75rem 1.5rem;
+        color: #94a3b8;
+        text-decoration: none;
+        transition: all 0.2s;
+        font-weight: 500;
+    }
+
+    .nav-link:hover {
+        color: white;
+        background-color: #1e293b;
+    }
+
+    .nav-link.active {
+        color: white;
+        background-color: var(--color-primary);
+        border-right: 4px solid #60a5fa;
+    }
+
+    .icon {
+        margin-right: 0.75rem;
+        font-size: 1.1rem;
+    }
+</style>

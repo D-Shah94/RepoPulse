@@ -1,0 +1,144 @@
+﻿@page "/repositories/{Id:int}"
+@inject ApiClient Api
+@inject NavigationManager NavManager
+
+<div style="margin-bottom: 2rem;">
+    <button class="btn" style="background-color: transparent; border: 1px solid var(--border-color); margin-bottom: 1rem;" @onclick="GoBack">
+        ← Back to Repositories
+    </button>
+
+    @if (_repo == null && _isLoading)
+    {
+        <p style="color: var(--color-text-muted);">Loading repository details...</p>
+    }
+    else if (_repo == null)
+    {
+        <div class="card">
+            <h3 style="color: var(--color-danger);">Repository Not Found</h3>
+            <p>The requested repository does not exist in our database.</p>
+        </div>
+    }
+    else
+    {
+        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+            <div>
+                <h1 style="margin-bottom: 0.25rem;">@_repo.FullName</h1>
+                @if (!string.IsNullOrEmpty(_repo.Description))
+                {
+                    <p style="color: var(--color-text-muted);">@_repo.Description</p>
+                }
+            </div>
+
+            <button class="btn btn-primary" @onclick="FetchDependencies" disabled="@_isFetching">
+                @if (_isFetching)
+                {
+                    <span>Syncing with GitHub...</span>
+                }
+                else
+                {
+                    <span>Fetch Dependencies</span>
+                }
+            </button>
+        </div>
+
+        <hr style="border: none; border-top: 1px solid var(--border-color); margin: 2rem 0;" />
+
+        @if (_fetchResult == null)
+        {
+            <div class="card" style="text-align: center; padding: 3rem 1rem;">
+                <span style="font-size: 2rem;">🔍</span>
+                <h3 style="margin-top: 1rem;">No Dependency Data</h3>
+                <p style="color: var(--color-text-muted);">Click "Fetch Dependencies" to scan this repository's root files on GitHub.</p>
+            </div>
+        }
+        else if (!_fetchResult.Manifests.Any())
+        {
+            <div class="card" style="text-align: center; padding: 3rem 1rem;">
+                <span style="font-size: 2rem;">🤷</span>
+                <h3 style="margin-top: 1rem;">No Supported Manifests Found</h3>
+                <p style="color: var(--color-text-muted);">We scanned the root directory but couldn't find any supported package.json, requirements.txt, or .csproj files.</p>
+            </div>
+        }
+        else
+        {
+            <div style="margin-bottom: 1.5rem;">
+                <span style="color: var(--color-text-muted); font-size: 0.9rem; font-weight: 500;">
+                    Data retrieved from GitHub at: @_fetchResult.FetchedAt.ToLocalTime().ToString("g")
+                </span>
+            </div>
+
+            @foreach (var group in _fetchResult.Manifests)
+            {
+                <div class="card table-container" style="margin-bottom: 2rem; padding: 0;">
+                    <div style="padding: 1rem 1.5rem; background-color: var(--color-bg-main); border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
+                        <h3 style="margin: 0; font-size: 1.1rem; font-family: monospace;">@group.ManifestFile</h3>
+                        <span class="badge" style="background-color: #e2e8f0; color: #475569;">@group.DependencyCount dependencies</span>
+                    </div>
+
+                    <table style="margin: 0;">
+                        <thead>
+                            <tr>
+                                <th>Package Name</th>
+                                <th>Version</th>
+                                <th>Ecosystem</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var dep in group.Dependencies)
+                            {
+                                <tr>
+                                    <td style="font-weight: 500; color: var(--color-primary);">@dep.PackageName</td>
+                                    <td style="font-family: monospace; color: var(--color-text-muted);">@dep.Version</td>
+                                    <td>
+                                        <span class="badge @GetBadgeClass(dep.PackageType)">@dep.PackageType</span>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        }
+    }
+</div>
+
+@code {
+    // This [Parameter] tells Blazor to grab the ID directly from the URL (/repositories/1)
+    [Parameter]
+    public int Id { get; set; }
+
+    private RepositoryDto? _repo;
+    private DependencyFetchResultDto? _fetchResult;
+
+    private bool _isLoading = true;
+    private bool _isFetching = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _isLoading = true;
+        _repo = await Api.GetRepositoryByIdAsync(Id);
+        _isLoading = false;
+    }
+
+    private async Task FetchDependencies()
+    {
+        _isFetching = true;
+        // This fires the massive backend orchestration engine we built!
+        _fetchResult = await Api.FetchDependenciesAsync(Id);
+        _isFetching = false;
+    }
+
+    private void GoBack()
+    {
+        NavManager.NavigateTo("/repositories");
+    }
+
+    // A clean C# switch expression to assign our CSS styles dynamically
+    private string GetBadgeClass(string type) => type.ToLowerInvariant() switch
+    {
+        "npm" => "badge-npm",
+        "nuget" => "badge-nuget",
+        "pip" => "badge-pip",
+        _ => ""
+    };
+}

@@ -31,9 +31,9 @@ namespace RepoPulse.API.Services
                 return cachedContent;
             }
 
-            _logger.LogInformation("Cache MISS for Owner}/{Repo}/{FilePath}. Fetching...", owner, repo, filePath);
+            _logger.LogInformation("Cache MISS for {Owner}/{Repo}/{FilePath}. Fetching...", owner, repo, filePath);
 
-            var response = await _httpClient.GetAsync($"repo/{owner}/{repo}/contents/{filePath}");
+            var response = await _httpClient.GetAsync($"repos/{owner}/{repo}/contents/{filePath}");
 
             if (!response.IsSuccessStatusCode)
             {
@@ -68,7 +68,7 @@ namespace RepoPulse.API.Services
 
         public async Task<IReadOnlyList<string>> GetRepositoryRootFilesAsync(string owner, string repo)
         {
-            var response = await _httpClient.GetAsync($"repo/{owner}/{repo}/contents");
+            var response = await _httpClient.GetAsync($"repos/{owner}/{repo}/contents");
 
             if (!response.IsSuccessStatusCode)
             {

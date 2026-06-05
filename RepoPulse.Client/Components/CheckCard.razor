@@ -1,0 +1,32 @@
+﻿<div class="card" style="display: flex; align-items: flex-start; justify-content: space-between;">
+    <div>
+        <h3 style="margin-bottom: 0.25rem; font-size: 1.1rem;">@Title</h3>
+        <p style="color: var(--color-text-muted); font-size: 0.9rem; margin: 0;">@Message</p>
+    </div>
+
+    <div>
+        @if (IsHealthy)
+        {
+            <span class="badge" style="background-color: #d1fae5; color: #065f46; font-size: 0.9rem; padding: 0.5em 1em;">
+                ✓ Healthy
+            </span>
+        }
+        else
+        {
+            <span class="badge" style="background-color: #fee2e2; color: #991b1b; font-size: 0.9rem; padding: 0.5em 1em;">
+                ✕ Degraded
+            </span>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public required string Title { get; set; }
+
+    [Parameter]
+    public required string Message { get; set; }
+
+    [Parameter]
+    public bool IsHealthy { get; set; }
+}

@@ -22,6 +22,9 @@ builder.Services.AddControllers()
         options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
     });
 
+builder.Services.AddExceptionHandler<RepoPulse.API.Infrastructure.GlobalExceptionHandler>();
+builder.Services.AddProblemDetails();
+
 // 4. In-Memory Cache & GitHub Client
 builder.Services.AddMemoryCache();
 builder.Services.AddHttpClient<IGitHubService, GitHubService>(client =>
@@ -42,7 +45,7 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("BlazorClient", policy =>
     {
-        policy.WithOrigins("https://localhost:7001", "http://localhost:5001")
+        policy.WithOrigins("https://localhost:7017", "https://localhost:7001", "http://localhost:5001")
             .AllowAnyHeader()
             .AllowAnyMethod();
     });
@@ -67,15 +70,15 @@ catch (Exception ex)
 }
 
 // 8. Middleware
+app.UseExceptionHandler(); // This will automatically trigger our GlobalExceptionHandler
+
 if (app.Environment.IsDevelopment())
 {
-    app.UseDeveloperExceptionPage();
     app.UseSwagger();
     app.UseSwaggerUI();
 }
 else
 {
-    app.UseExceptionHandler("/error");
     app.UseHsts();
 }
 

@@ -11,7 +11,7 @@ using RepoPulse.API.Data;
 namespace RepoPulse.API.Data.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260603171345_InitialCreate")]
+    [Migration("20260604151506_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -26,18 +26,18 @@ namespace RepoPulse.API.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
-                    b.Property<string>("Name")
+                    b.Property<string>("PackageName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("PackageType")
                         .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("TEXT");
 
                     b.Property<int>("SnapshotId")
                         .HasColumnType("INTEGER");
-
-                    b.Property<string>("Type")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("TEXT");
 
                     b.Property<string>("Version")
                         .IsRequired()
@@ -111,34 +111,34 @@ namespace RepoPulse.API.Data.Migrations
 
             modelBuilder.Entity("RepoPulse.API.Models.DependencyEntry", b =>
                 {
-                    b.HasOne("RepoPulse.API.Models.DependencySnapshot", "Snapshot")
-                        .WithMany("Dependencies")
+                    b.HasOne("RepoPulse.API.Models.DependencySnapshot", "DependencySnapshot")
+                        .WithMany("Entries")
                         .HasForeignKey("SnapshotId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Snapshot");
+                    b.Navigation("DependencySnapshot");
                 });
 
             modelBuilder.Entity("RepoPulse.API.Models.DependencySnapshot", b =>
                 {
-                    b.HasOne("RepoPulse.API.Models.TrackedRepository", "Repository")
-                        .WithMany("Snapshots")
+                    b.HasOne("RepoPulse.API.Models.TrackedRepository", "TrackedRepository")
+                        .WithMany("DependencySnapshots")
                         .HasForeignKey("RepositoryId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Repository");
+                    b.Navigation("TrackedRepository");
                 });
 
             modelBuilder.Entity("RepoPulse.API.Models.DependencySnapshot", b =>
                 {
-                    b.Navigation("Dependencies");
+                    b.Navigation("Entries");
                 });
 
             modelBuilder.Entity("RepoPulse.API.Models.TrackedRepository", b =>
                 {
-                    b.Navigation("Snapshots");
+                    b.Navigation("DependencySnapshots");
                 });
 #pragma warning restore 612, 618
         }

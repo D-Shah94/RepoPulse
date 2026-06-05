@@ -22,7 +22,7 @@ public sealed class RepositoryService : IRepositoryService
         _logger = logger;
     }
 
-    public async Task<IReadOnlyList<ApiDtos>> GetAllAsync()
+    public async Task<IReadOnlyList<RepositoryDto>> GetAllAsync()
     {
         var repos = await _db.TrackedRepositories
             .AsNoTracking()
@@ -33,7 +33,7 @@ public sealed class RepositoryService : IRepositoryService
         return repos.Select(MapToDto).ToList().AsReadOnly();
     }
 
-    public async Task<ApiDtos?> GetByIdAsync(int id)
+    public async Task<RepositoryDto?> GetByIdAsync(int id)
     {
         var repo = await _db.TrackedRepositories
             .AsNoTracking()
@@ -42,7 +42,7 @@ public sealed class RepositoryService : IRepositoryService
         return repo is null ? null : MapToDto(repo);
     }
 
-    public async Task<ApiDtos> CreateAsync(CreateRepositoryDto dto)
+    public async Task<RepositoryDto> CreateAsync(CreateRepositoryDto dto)
     {
         var repo = new TrackedRepository
         {
@@ -131,7 +131,7 @@ public sealed class RepositoryService : IRepositoryService
         );
     }
 
-    private static ApiDtos MapToDto(TrackedRepository repo) =>
+    private static RepositoryDto MapToDto(TrackedRepository repo) =>
         new(
             Id: repo.Id,
             Owner: repo.Owner,

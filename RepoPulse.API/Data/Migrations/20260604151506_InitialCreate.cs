@@ -56,9 +56,9 @@ namespace RepoPulse.API.Data.Migrations
                     Id = table.Column<int>(type: "INTEGER", nullable: false)
                         .Annotation("Sqlite:Autoincrement", true),
                     SnapshotId = table.Column<int>(type: "INTEGER", nullable: false),
-                    Name = table.Column<string>(type: "TEXT", maxLength: 200, nullable: false),
+                    PackageName = table.Column<string>(type: "TEXT", maxLength: 200, nullable: false),
                     Version = table.Column<string>(type: "TEXT", maxLength: 200, nullable: false),
-                    Type = table.Column<string>(type: "TEXT", maxLength: 200, nullable: false)
+                    PackageType = table.Column<string>(type: "TEXT", maxLength: 200, nullable: false)
                 },
                 constraints: table =>
                 {
