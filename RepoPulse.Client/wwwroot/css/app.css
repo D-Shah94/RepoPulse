@@ -47,10 +47,11 @@ h1, h2, h3, h4 {
 
 .sidebar {
     width: 250px;
-    background-color: var(--color-bg-sidebar);
+    background: linear-gradient(180deg, #0f172a 0%, #1e1b4b 100%);
     color: var(--color-text-inverse);
     display: flex;
     flex-direction: column;
+    box-shadow: 4px 0 15px rgba(0, 0, 0, 0.1);
 }
 
 .sidebar-brand {
@@ -68,6 +69,9 @@ h1, h2, h3, h4 {
     display: flex;
     flex-direction: column;
     overflow-x: hidden;
+    background-color: var(--color-bg-main);
+    background-image: radial-gradient(#cbd5e1 1px, transparent 1px);
+    background-size: 24px 24px;
 }
 
 .content-area {
@@ -86,7 +90,13 @@ h1, h2, h3, h4 {
     padding: 1.5rem;
     box-shadow: var(--shadow-sm);
     margin-bottom: 1rem;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
+
+    .card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    }
 
 /* Buttons */
 .btn {
@@ -103,12 +113,16 @@ h1, h2, h3, h4 {
 }
 
 .btn-primary {
-    background-color: var(--color-primary);
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
     color: white;
+    border: none;
+    box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2);
 }
 
     .btn-primary:hover {
-        background-color: var(--color-primary-hover);
+        background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%);
+        box-shadow: 0 6px 10px -1px rgba(37, 99, 235, 0.4);
+        transform: translateY(-1px);
     }
 
 .btn-danger {
@@ -178,4 +192,11 @@ th {
 
 tr:last-child td {
     border-bottom: none;
+}
+
+/* Custom Focus Rings for Keyboard Accessibility */
+*:focus-visible {
+    outline: 3px solid var(--color-primary) !important;
+    outline-offset: 3px !important;
+    border-radius: 2px;
 }

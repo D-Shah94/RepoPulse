@@ -39,6 +39,15 @@ else if (_status != null)
                    IsHealthy="@(_status.RateLimitRemaining > 0)" />
 
     </div>
+
+    <div style="margin-top: 2rem; padding: 1.5rem; background-color: #f0f9ff; border-left: 4px solid #3b82f6; border-radius: var(--border-radius);">
+        <h4 style="color: #1e3a8a; font-size: 1rem; margin-bottom: 0.5rem; display: flex; align-items: center;">
+            <span style="margin-right: 0.5rem; font-size: 1.2rem;">ℹ️</span> About GitHub Rate Limits
+        </h4>
+        <p style="color: #1e40af; font-size: 0.9rem; margin: 0; line-height: 1.6;">
+            RepoPulse intelligently optimises GitHub API usage. Scanning a repository's root directory consumes <strong>1 request</strong>. Downloading each supported manifest file (e.g., package.json) consumes <strong>1 additional request</strong>. Therefore, a single "Fetch" will typically consume between 1 and 4 requests from your unauthenticated hourly limit depending on the repository's complexity.
+        </p>
+    </div>
 }
 
 @code {
@@ -53,10 +62,7 @@ else if (_status != null)
     private async Task LoadHealthData()
     {
         _isLoading = true;
-
-        // This is where the magic happens! We call our backend through the ApiClient bridge.
         _status = await Api.GetHealthAsync();
-
         _isLoading = false;
     }
 }

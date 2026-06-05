@@ -1,0 +1,97 @@
+﻿@page "/"
+@inject ApiClient Api
+@inject NavigationManager NavManager
+
+<div style="margin-bottom: 2rem;">
+    <h1 style="margin-bottom: 0.5rem;">Dashboard</h1>
+    <p style="color: var(--color-text-muted);">A high-level overview of your tracked repositories and sync status.</p>
+</div>
+
+@if (_isLoading)
+{
+    <p style="color: var(--color-text-muted);">Loading dashboard metrics...</p>
+}
+else
+{
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+        
+        <div class="card" style="display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 2rem;">
+            <h3 style="color: var(--color-text-muted); font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.5rem;">Total Tracked</h3>
+            <span style="font-size: 3.5rem; font-weight: 700; color: var(--color-primary); line-height: 1;">@_repositories.Count</span>
+        </div>
+
+        <div class="card" style="display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 2rem;">
+            <h3 style="color: var(--color-text-muted); font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.5rem;">Synced Recently (24h)</h3>
+            <span style="font-size: 3.5rem; font-weight: 700; color: var(--color-success); line-height: 1;">@_recentlySyncedCount</span>
+        </div>
+
+    </div>
+
+    <div class="card table-container">
+        <h3 style="margin-bottom: 1rem; font-size: 1.2rem;">Quick Access</h3>
+        
+        @if (!_repositories.Any())
+        {
+            <p style="color: var(--color-text-muted); padding-bottom: 1rem;">No repositories tracked yet. Head over to the Repositories tab to add your first one.</p>
+        }
+        else
+        {
+            <table>
+                <thead>
+                    <tr>
+                        <th>Repository</th>
+                        <th>Status</th>
+                        <th style="text-align: right;">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var repo in _repositories.Take(5))
+                    {
+                        <tr>
+                            <td style="font-weight: 600;">@repo.FullName</td>
+                            <td>
+                                @if (repo.LastFetchedAt.HasValue)
+                                {
+                                    <span class="badge" style="background-color: #d1fae5; color: #065f46;">Synced</span>
+                                }
+                                else
+                                {
+                                    <span class="badge" style="background-color: #fef3c7; color: #92400e;">Pending Fetch</span>
+                                }
+                            </td>
+                            <td style="text-align: right;">
+                                <button class="btn" style="border: 1px solid var(--border-color); background-color: transparent; color: var(--color-text-main); font-size: 0.85rem; padding: 0.25rem 0.75rem;" @onclick="() => NavigateTo(repo.Id)">
+                                    View Repository
+                                </button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    </div>
+}
+
+@code {
+    private IReadOnlyList<RepositoryDto> _repositories = new List<RepositoryDto>();
+    private bool _isLoading = true;
+    private int _recentlySyncedCount = 0;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _isLoading = true;
+        // Null-coalescing operator to ensure we never hit a NullReferenceException
+        _repositories = await Api.GetRepositoriesAsync() ?? new List<RepositoryDto>();
+
+        // Calculate how many repos were successfully synced in the last 24 hours
+        var yesterday = DateTime.UtcNow.AddDays(-1);
+        _recentlySyncedCount = _repositories.Count(r => r.LastFetchedAt.HasValue && r.LastFetchedAt.Value >= yesterday);
+
+        _isLoading = false;
+    }
+
+    private void NavigateTo(int id)
+    {
+        NavManager.NavigateTo($"/repositories/{id}");
+    }
+}
