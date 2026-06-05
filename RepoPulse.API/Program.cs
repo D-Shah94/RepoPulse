@@ -39,15 +39,14 @@ builder.Services.AddHttpClient<IGitHubService, GitHubService>(client =>
 builder.Services.AddScoped<IRepositoryService, RepositoryService>();
 builder.Services.AddScoped<DependencyParser>();
 
-
 // 5. CORS Policy
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("BlazorClient", policy =>
     {
-        policy.WithOrigins("https://localhost:7017", "https://localhost:7001", "http://localhost:5001", "http://localhost:3000")
-            .AllowAnyHeader()
-            .AllowAnyMethod();
+        policy.AllowAnyOrigin()
+              .AllowAnyHeader()
+              .AllowAnyMethod();
     });
 });
 
