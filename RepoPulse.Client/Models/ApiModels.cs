@@ -9,7 +9,8 @@ public sealed record RepositoryDto(
     string? Description,
     DateTime? LastFetchedAt,
     DateTime CreatedAt,
-    string FullName
+    string FullName,
+    DependencyFetchResultDto? LatestSnapshot
 );
 
 public class CreateRepositoryDto

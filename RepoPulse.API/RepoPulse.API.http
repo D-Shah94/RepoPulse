@@ -1,6 +1,6 @@
 @RepoPulse.API_HostAddress = http://localhost:5098
 
-GET {{RepoPulse.API_HostAddress}}/weatherforecast/
+GET {{RepoPulse.API_HostAddress}}/repopulse/
 Accept: application/json
 
 ###

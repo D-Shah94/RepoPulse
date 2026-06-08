@@ -96,6 +96,62 @@ namespace RepoPulse.API.Services
             return files;
         }
 
+        public async Task<IReadOnlyList<string>> GetRepositoryFilesRecursiveAsync(string owner, string repo)
+        {
+            var cacheKey = $"tree_{owner}_{repo}";
+
+            if (_cache.TryGetValue(cacheKey, out IReadOnlyList<string>? cachedTree) && cachedTree != null)
+            {
+                _logger.LogDebug("Cache HIT for recursive tree {Owner}/{Repo}", owner, repo);
+                return cachedTree;
+            }
+
+            _logger.LogInformation("Cache MISS for recursive tree {Owner}/{Repo}. Fetching...", owner, repo);
+
+            try
+            {
+                // 1. Get default branch (main or master)
+                var repoResponse = await _httpClient.GetAsync($"repos/{owner}/{repo}");
+                if (!repoResponse.IsSuccessStatusCode) return Array.Empty<string>();
+
+                var repoInfo = await repoResponse.Content.ReadFromJsonAsync<JsonElement>();
+                if (!repoInfo.TryGetProperty("default_branch", out var branchProp)) return Array.Empty<string>();
+                var defaultBranch = branchProp.GetString();
+
+                // 2. Fetch entire tree recursively in ONE request
+                var treeResponse = await _httpClient.GetAsync($"repos/{owner}/{repo}/git/trees/{defaultBranch}?recursive=1");
+                if (!treeResponse.IsSuccessStatusCode) return Array.Empty<string>();
+
+                var treeData = await treeResponse.Content.ReadFromJsonAsync<JsonElement>();
+                var files = new List<string>();
+
+                if (treeData.TryGetProperty("tree", out var treeArray))
+                {
+                    foreach (var item in treeArray.EnumerateArray())
+                    {
+                        // We only care about files (blob), not folders (tree)
+                        if (item.TryGetProperty("type", out var type) && type.GetString() == "blob")
+                        {
+                            var path = item.GetProperty("path").GetString();
+                            if (!string.IsNullOrEmpty(path)) files.Add(path);
+                        }
+                    }
+                }
+
+                var readOnlyFiles = files.AsReadOnly();
+
+                // Cache the tree to protect the rate limit!
+                _cache.Set(cacheKey, readOnlyFiles, TimeSpan.FromMinutes(_options.CacheTtlMinutes));
+
+                return readOnlyFiles;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to fetch recursive tree for {Owner}/{Repo}", owner, repo);
+                return Array.Empty<string>();
+            }
+        }
+
         public async Task<GitHubHealthStatus> GetApiHealthStatusAsync()
         {
             try

@@ -35,11 +35,54 @@ public sealed class RepositoryService : IRepositoryService
 
     public async Task<RepositoryDto?> GetByIdAsync(int id)
     {
+        // Include the snapshots and entries from EF Core
         var repo = await _db.TrackedRepositories
+            .Include(r => r.DependencySnapshots)
+                .ThenInclude(s => s.Entries)
             .AsNoTracking()
             .FirstOrDefaultAsync(r => r.Id == id);
 
-        return repo is null ? null : MapToDto(repo);
+        if (repo == null) return null;
+
+        DependencyFetchResultDto? latestSnapshotDto = null;
+
+        // Check if we have fetched this before
+        if (repo.LastFetchedAt.HasValue && repo.DependencySnapshots.Any())
+        {
+            // Group the snapshots from the most recent fetch
+            var recentSnapshots = repo.DependencySnapshots
+                .Where(s => s.FetchedAt == repo.LastFetchedAt)
+                .ToList();
+
+            if (recentSnapshots.Any())
+            {
+                // Map the EF Core Entities into our DTOs
+                var manifestGroups = recentSnapshots.Select(s => new ManifestGroupDto(
+                    s.ManifestFile,
+                    s.Entries?.Count ?? 0,
+                    s.Entries?.Select(e => new DependencyEntryDto(e.Id, e.PackageName, e.Version, e.PackageType)).ToList() ?? new List<DependencyEntryDto>()
+                )).ToList();
+
+                latestSnapshotDto = new DependencyFetchResultDto(
+                    repo.Id,
+                    repo.Owner,
+                    repo.RepoName,
+                    repo.LastFetchedAt.Value,
+                    manifestGroups
+                );
+            }
+        }
+
+        return new RepositoryDto(
+            repo.Id,
+            repo.Owner,
+            repo.RepoName,
+            repo.Description,
+            repo.LastFetchedAt,
+            repo.CreatedAt,
+            $"{repo.Owner}/{repo.RepoName}",
+            latestSnapshotDto // <--- Pass the hydrated data into the DTO!
+        );
     }
 
     public async Task<RepositoryDto> CreateAsync(CreateRepositoryDto dto)

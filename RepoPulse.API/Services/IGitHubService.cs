@@ -12,11 +12,19 @@
         /// </summary>
         Task<string?> GetFileContentsAsync(string owner, string repo, string filePath);
 
+
         /// <summary>
         /// Fetches the root-level directory listing for a GitHub repository.
         /// Used to discover which dependency manifest files are present.
         /// </summary>
         Task<IReadOnlyList<string>> GetRepositoryRootFilesAsync(string owner, string repo);
+
+
+        /// <summary>
+        /// Fetches the recursive tree for a GitHub repository.
+        /// Used to discover which dependency manifest files are present.
+        /// </summary>
+        Task<IReadOnlyList<string>> GetRepositoryFilesRecursiveAsync(string owner, string repo);
 
         /// <summary>
         /// Checks whether the GitHub API is currently reachable and returns

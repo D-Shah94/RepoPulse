@@ -117,6 +117,13 @@
     {
         _isLoading = true;
         _repo = await Api.GetRepositoryByIdAsync(Id);
+
+        // HYDRATE THE UI: If the database already had a recent snapshot, display it immediately!
+        if (_repo?.LatestSnapshot != null)
+        {
+            _fetchResult = _repo.LatestSnapshot;
+        }
+
         _isLoading = false;
     }
 

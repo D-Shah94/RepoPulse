@@ -9,7 +9,8 @@ public sealed record RepositoryDto(
     string? Description,
     DateTime? LastFetchedAt,
     DateTime CreatedAt,
-    string FullName // Computed convenience property
+    string FullName, // Computed convenience property
+    DependencyFetchResultDto? LatestSnapshot = null
 );
 
 public sealed record CreateRepositoryDto(

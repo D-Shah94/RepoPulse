@@ -20,15 +20,26 @@ public class DependencyParser
     public async Task<IReadOnlyList<ParsedManifest>> ParseRepositoryAsync(string owner, string repo)
     {
         var results = new List<ParsedManifest>();
-        var rootFiles = await _gitHubService.GetRepositoryRootFilesAsync(owner, repo);
 
-        var csprojFiles = rootFiles.Where(f => f.EndsWith(".csproj", StringComparison.OrdinalIgnoreCase)).ToList();
-        var manifestsToAttempt = KnownManifestFiles.Concat(csprojFiles).ToList();
+        // 1. Fetch ALL files recursively (Costs 1 API Request!)
+        var allFiles = await _gitHubService.GetRepositoryFilesRecursiveAsync(owner, repo);
 
-        foreach (var manifestFile in manifestsToAttempt)
+        // 2. Filter for recognised manifests, explicitly ignoring junk folders
+        var manifestsToAttempt = allFiles.Where(f =>
+            !f.Contains("node_modules/") &&
+            !f.Contains("vendor/") &&
+            !f.Contains("bin/") &&
+            !f.Contains("obj/") &&
+            (f.EndsWith("package.json", StringComparison.OrdinalIgnoreCase) ||
+             f.EndsWith("requirements.txt", StringComparison.OrdinalIgnoreCase) ||
+             f.EndsWith(".csproj", StringComparison.OrdinalIgnoreCase))
+        ).ToList();
+
+        // 3. SAFETY CAP: Process max 5 manifests to protect the rate limit
+        var safeManifestList = manifestsToAttempt.Take(5).ToList();
+
+        foreach (var manifestFile in safeManifestList)
         {
-            if (!rootFiles.Contains(manifestFile, StringComparer.OrdinalIgnoreCase)) continue;
-
             _logger.LogInformation("Parsing manifest {ManifestFile} for {Owner}/{Repo}", manifestFile, owner, repo);
 
             var content = await _gitHubService.GetFileContentsAsync(owner, repo, manifestFile);
