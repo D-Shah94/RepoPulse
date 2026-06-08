@@ -7,7 +7,6 @@
     <img alt=".NET 8" src="https://img.shields.io/badge/.NET-8.0-purple"/>
     <img alt="Blazor WASM" src="https://img.shields.io/badge/Blazor-WebAssembly-512BD4"/>
     <img alt="Docker" src="https://img.shields.io/badge/Docker-Compose-2496ED"/>
-    <img alt="Platform" src="https://img.shields.io/badge/Hosted-Oracle%20Cloud-F80000"/>
   </p>
 </p>
 
@@ -72,25 +71,15 @@ Most dependency tracking tools (Dependabot, Renovate, Snyk) operate as CI/CD bot
 
 - **Read-only and non-intrusive** — it never needs repository write access or a GitHub token (unauthenticated public API only).
 - **Snapshot-based archival** — every fetch is preserved as an immutable record, not a live overwrite. This enables historical comparison and trend analysis.
-- **Self-hosted and portable** — the entire stack runs on a free Oracle Cloud VM via Docker Compose. No SaaS subscription, no vendor lock-in.
+- **Self-hosted and portable** — the entire stack is fully containerised and runs locally via Docker Compose. No SaaS subscription, no vendor lock-in
 - **Multi-ecosystem parsing in one place** — npm, pip, and NuGet manifests are parsed and stored in a single normalised schema.
-
----
-
-## Live Demo
-
-| Service | URL |
-|---------|-----|
-| Dashboard | `http://<YOUR_OCI_PUBLIC_IP>` |
-| API Health | `http://<YOUR_OCI_PUBLIC_IP>:8080/health` |
-| Swagger UI | `http://<YOUR_OCI_PUBLIC_IP>:8080/swagger` *(development only)* |
 
 ---
 
 ## Features
 
 - **Repository watchlist** — add any public GitHub repository by `owner/repo` and manage it from the dashboard.
-- **On-demand dependency fetch** — trigger a fetch from the repository detail page; the API retrieves and parses all recognised manifest files in the repository root.
+- **On-demand dependency fetch** — trigger a fetch from the repository detail page; the API recursively scans the entire repository tree using the Git Trees API, locating and parsing recognised manifest files regardless of folder depth (safely capped at 5 files to protect unauthenticated rate limits).
 - **Multi-ecosystem parsing** — supports `package.json` (npm, including `dependencies` and `devDependencies`), `requirements.txt` (pip, including version operators), and `*.csproj` (NuGet).
 - **Snapshot archival** — each successful fetch creates a `DependencySnapshot` record and associated `DependencyEntry` rows; previous snapshots are never deleted.
 - **60-minute TTL cache** — GitHub API responses are cached in `IMemoryCache`; the cache key is a composite of owner, repo, and file path. Repeated fetches within the TTL window return cached data without consuming rate-limit budget.
@@ -120,7 +109,7 @@ The architecture follows a strict layered pattern:
 ![Data Flow](docs/diagrams/Data%20Flow.jpg)
 > *(The diagram shows the 9-step flow: Blazor UI → DependenciesController → RepositoryService → cache check → GitHub REST API (on cache miss) → IMemoryCache (TTL 60 min) → DependencyParser → RepositoryService persists snapshot → RepositoriesController returns JSON → Blazor renders results.)*
 
-When a user clicks **Fetch Dependencies** on a repository detail page:
+When a user navigates to a repository detail page, the UI is instantly hydrated with the most recent cached snapshot from the database via Entity Framework's Include queries. If the user clicks Fetch Dependencies to trigger a manual sync, the following flow occurs:
 
 1. The Blazor client issues `POST /api/repositories/{id}/fetch`.
 2. `DependenciesController` receives the request and delegates to `RepositoryService.FetchDependenciesAsync`.
@@ -293,8 +282,10 @@ dotnet run
 | Service | URL |
 |---------|-----|
 | Blazor Dashboard | `https://localhost:7017` |
-| API (Swagger) | `https://localhost:7001/swagger` |
-| Health Endpoint | `https://localhost:7001/health` |
+| API (Swagger) | `http://localhost:5098/swagger` |
+| Health Endpoint | `http://localhost:5098/health` |
+
+> **Note:** The `appsettings.Development.json` automatically handles routing the UI to Port 5098 when running via Visual Studio).
 
 In **Development** mode the API uses a local SQLite file (`repopulse.db`) created automatically in the project directory. No database setup is required.
 
@@ -346,77 +337,6 @@ docker compose down -v
 **Volume persistence:** The `docker-compose.yml` mounts a named volume at `/data` inside the API container and sets the SQLite connection string to `/data/repopulse.db`. This ensures the database survives container restarts. Without this volume, every `docker compose down` would wipe all registered repositories.
 
 **Health-check dependency:** The `client` service is configured with `depends_on: api: condition: service_healthy`. Docker waits for the API's `/health` endpoint to return 200 before starting the Nginx container. This prevents the UI from loading while the API is still applying database migrations.
-
----
-
-## Production Deployment (Oracle Cloud)
-
-RepoPulse is deployed on an Oracle Cloud Infrastructure **VM.Standard.E2.1.Micro** instance (Always Free tier): 1 OCPU, 1 GB RAM, x86-64 Ubuntu.
-
-### 1. Provision and prepare the VM
-
-SSH into your Ubuntu VM and run the following:
-
-```bash
-# Update packages
-sudo apt-get update && sudo apt-get upgrade -y
-
-# Remove any conflicting database services to free RAM
-sudo apt-get remove --purge -y mysql-server postgresql mariadb-server
-sudo apt-get autoremove -y && sudo apt-get autoclean -y
-
-# Create and enable a 4 GB swap file (critical on a 1 GB VM)
-sudo fallocate -l 4G /swapfile
-sudo chmod 600 /swapfile
-sudo mkswap /swapfile
-sudo swapon /swapfile
-echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
-
-# Install Docker
-sudo apt-get install -y docker.io docker-compose
-sudo systemctl enable --now docker
-sudo usermod -aG docker $USER   # allows running docker without sudo after re-login
-```
-
-### 2. Configure the firewall
-
-```bash
-sudo ufw allow 22/tcp    # SSH
-sudo ufw allow 80/tcp    # HTTP (Nginx/Blazor)
-sudo ufw allow 8080/tcp  # API
-sudo ufw --force enable
-```
-
-> Also open ports 80 and 8080 in the OCI Console under **Networking → Virtual Cloud Networks → Security Lists**.
-
-### 3. Deploy
-
-```bash
-# Clone the repository on the VM
-git clone https://github.com/D-Shah94/RepoPulse.git
-cd RepoPulse
-
-# Build and start
-docker compose up --build -d
-```
-
-The `-d` flag runs containers in the background. Logs can be tailed with:
-
-```bash
-docker compose logs -f
-```
-
-### 4. Keeping it running after reboots
-
-Add `restart: unless-stopped` to each service in `docker-compose.yml` (already included). Docker automatically restarts both containers on VM reboot.
-
-### Why Oracle Cloud (Always Free)?
-
-Oracle's Always Free tier provides perpetual compute capacity at no cost — not a 12-month trial. The 1 GB RAM constraint required careful configuration:
-
-- The 4 GB swap file prevents the Docker daemon from OOM-killing containers during builds.
-- SQLite was chosen over MS SQL Server for the containerised deployment specifically because SQL Server requires a minimum of 2 GB RAM and cannot start reliably on a 1 GB VM without complex memory-bypass shims (`LD_PRELOAD` hacks with `libjemalloc`).
-- Container memory limits in `docker-compose.yml` (`mem_limit`) prevent a single runaway container from starving the other.
 
 ---
 
@@ -583,7 +503,7 @@ Full-stack C# means one language and one ecosystem. The entire application — f
 
 **Q: What happens if the GitHub rate limit is hit?**
 
-The 60-minute TTL cache means each unique file path costs at most one GitHub API request per hour. In practice, a typical repository requires 2–4 requests (root listing + manifest files), so the 60-requests-per-hour unauthenticated limit is extremely difficult to exhaust with normal usage. If the limit is hit, `GitHubService` receives a `429` or non-success status code, logs the failure, returns `null`, and the API returns a structured error response. The application degrades gracefully without crashing.
+The 60-minute TTL cache means each unique file path costs at most one GitHub API request per hour. In practice, a typical repository requires only two requests (fetching the default branch and the recursive tree), so the 60-requests-per-hour limit is extremely difficult to exhaust with normal usage. If the limit is hit, `GitHubService` receives a `429` or non-success status code, logs the failure, returns `null`, and the API returns a structured error response. The application degrades gracefully without crashing.
 
 **Q: Why `IMemoryCache` and not Redis?**
 
